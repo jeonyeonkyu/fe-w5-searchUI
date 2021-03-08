@@ -1,0 +1,27 @@
+{
+  "type": "module",
+  "name": "martian",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "watch:scss": "sass --watch public/scss:public/css",
+    "watch:webpack": "npx webpack",
+    "predeploy-scss": "sass public/scss:public/css",
+    "server:start": "nodemon ./bin/www",
+    "start": "node tools/start"
+  },
+  "dependencies": {
+    "concurrently": "^6.0.0",
+    "consolidate": "^0.16.0",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "morgan": "~1.9.1",
+    "pug": "^3.0.2",
+    "sass": "^1.32.8",
+    "swig": "^1.4.2",
+    "webpack": "^5.24.3",
+    "webpack-cli": "^4.5.0"
+  }
+}
