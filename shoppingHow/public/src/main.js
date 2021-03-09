@@ -1,14 +1,17 @@
 import LoadDataManager from './LoadDataManager.js';
 import LoadView from './LoadView.js';
 import BottomCarouselView from './BottomCarouselView.js';
+import SearchTermRankView from './SearchTermRankView.js';
 import _ from './util.js';
 
 
 window.addEventListener('DOMContentLoaded', () => {
+  const jsonUrl = {
+    mainImg: 'https://shoppinghow.kakao.com/v1.0/shophow/top/planningEvent.json?',
+    moreImg: 'https://shoppinghow.kakao.com/v1/event/homecontents.json?page=1&countPerPage=20&min_num=0',
+  }
 
-  const mainImgJsonUrl = 'https://shoppinghow.kakao.com/v1.0/shophow/top/planningEvent.json?';
-  const moreImgJsonUrl = 'https://shoppinghow.kakao.com/v1/event/homecontents.json?page=1&countPerPage=20&min_num=0';
-  const loadDataManager = new LoadDataManager({ mainImgJsonUrl, moreImgJsonUrl });
+  const loadDataManager = new LoadDataManager(jsonUrl);
 
   const nodeObj = {
     leftTopImg: _.$('._left_top_image'),
@@ -32,4 +35,16 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   const bottomCarouselView = new BottomCarouselView({ loadDataManager }, bottomElements);
+
+
+  const searchInput = {
+    $inputElement: _.$('._search_input'),
+    $rankKeywordList: _.$('._rank_keyword_list'),
+    rankUrl: 'https://shoppinghow.kakao.com/v1.0/shophow/top/recomKeyword.json?_=1615189485140',
+
+  }
+
+  const searchTermRankView = new SearchTermRankView(searchInput);
+
+
 })

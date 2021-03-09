@@ -1,19 +1,19 @@
 import fetch from 'cross-fetch';
 
 class LoadDataManager {
-  constructor({ mainImgJsonUrl, moreImgJsonUrl }) {
-    this.mainImgJsonUrl = mainImgJsonUrl;
-    this.moreImgJsonUrl = moreImgJsonUrl;
+  constructor({ mainImg, moreImg }) {
+    this.mainImg = mainImg;
+    this.moreImg = moreImg;
     this.nextImgUrlPage = 1;
   }
 
   getResponseMainImgUrl() {
-    return fetch(this.mainImgJsonUrl)
+    return fetch(this.mainImg)
       .then(response => response.json());
   }
 
   getResponseMoreImgUrl() {
-    return fetch(this.moreImgJsonUrl)
+    return fetch(this.moreImg)
       .then(response => response.json());
   }
 
@@ -47,9 +47,9 @@ class LoadDataManager {
   }
 
   setNextImgUrl({ pageInfo }) {
-    const nextPageUrl = this.moreImgJsonUrl.replace(/(page=)\d+/, `page=${++this.nextImgUrlPage}`);
+    const nextPageUrl = this.moreImg.replace(/(page=)\d+/, `page=${++this.nextImgUrlPage}`);
     const nextMinNumUrl = nextPageUrl.replace(/(min_num=)\d+/, `min_num=${pageInfo.min_num}`);
-    this.moreImgJsonUrl = nextMinNumUrl;
+    this.moreImg = nextMinNumUrl;
   }
 }
 
