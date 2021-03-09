@@ -28,19 +28,32 @@
     &--input {
       width: 100%;
       place-self: center;
-      > input {
+      input {
         width: 90%;
         height: 40px;
         margin-left: 33px;
         font-size: 20px;
         border-style: none;
+        background: content-box;
         &:focus {
           outline: none;
         }
       }
-      > ol {
-        //일단 가려놓기
-        display: none;
+      div {
+        position: absolute;
+        height: 22px;
+        top: 60px;
+        overflow-y: hidden;
+        z-index: -1;
+        ol {
+          > li {
+            height: 22px;
+            line-height: 22px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #939393;
+          }
+        }
       }
     }
 
