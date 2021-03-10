@@ -1,45 +1,38 @@
-import fetch from 'cross-fetch';
 import { getResponseJsonUrl, delay } from './serviceUtil.js';
 
-function SearchTermRankView({ $inputElement, $rankKeywordList, rankUrl }) {
+function SearchTermRankView({ $inputElement, $rankKeywordList, rankUrl, rolling }) {
   this.$inputElement = $inputElement;
   this.$rankKeywordList = $rankKeywordList;
   this.rankUrl = rankUrl;
+  this.rolling = rolling;
   this.rankKeywordArray = [];
-  this.rolling = {
-    timer: null,
-    timeSeconds: 3000,
-    maxPosition: '220',
-  };
+  this.RANKS_NUMBER = 10;
   this.init();
 }
 
 SearchTermRankView.prototype.init = async function () {
   const rankObj = await getResponseJsonUrl(this.rankUrl);
-  this.rankKeywordArray = rankObj.list.map(e => e.keyword).slice(0, 10);
-  console.log(this.$rankKeywordList);
-  this.makeTemplate();
+  this.rankKeywordArray = rankObj.list.map(item => item.keyword).slice(0, this.RANKS_NUMBER);
+  this.renderRollingTemplate();
+  this.renderPopupTemplate();
   this.rollingSearchBar();
   this.observeSearchBarState();
-  // this.initEvent();
+  this.initEvent();
 }
 
 SearchTermRankView.prototype.initEvent = function () {
-  this.inputElement.addEventListener('input', async ({ target }) => {
-    // const a = await getResponseJsonUrl((`https://suggest-bar.daum.net/suggest?callback=jQuery34109517340090479085_1615213153801&limit=10&mode=json&code=utf_in_out&q=${target.value}&id=shoppinghow_suggest`));
-    // console.log(a)
+  this.$inputElement.addEventListener('click', (e) => {
+    clearTimeout(this.rolling.timer);
   });
-}
 
-SearchTermRankView.prototype.makeTemplate = function () {
-  let template = this.rankKeywordArray.map((item, index) => {
-    return `<li>
-              <span>${index + 1}</span>  <span>${item}</span>
-           </li>`;
-  }).join('');
-  template += `<li><span>1</span>  <span>${this.rankKeywordArray[0]}</span></li>`
+  document.addEventListener('click', ({ target }) => {
+    if (target === this.$inputElement) return;
 
-  this.$rankKeywordList.innerHTML = template;
+  })
+
+  this.$inputElement.addEventListener('input', async ({ target }) => {
+    console.log(target.value)
+  });
 }
 
 SearchTermRankView.prototype.rollingSearchBar = function () {
@@ -64,8 +57,30 @@ SearchTermRankView.prototype.observeSearchBarState = function () {
   observer.observe(this.$rankKeywordList, config);
 }
 
+SearchTermRankView.prototype.renderRollingTemplate = function () {
+  let template = this.rankKeywordArray.map((item, index) => {
+    return `<li>
+              <span>${index + 1}</span>  <span>${item}</span>
+           </li>`;
+  }).join('');
+  template += `<li><span>1</span>  <span>${this.rankKeywordArray[0]}</span></li>`;
 
+  this.$rankKeywordList.innerHTML = template;
+}
 
+SearchTermRankView.prototype.renderPopupTemplate = function () {
+  const template = `<div class="input_popup">
+                      <div>인기 쇼핑 키워드</div>
+                      <ul>
+                        ${this.rankKeywordArray.map((item, index) => {
+    return `<li>
+             <span class="bold">${index + 1}</span> <span>${item}</span>
+            </li>`
+  }).join('')}
+                      </ul>
+                    </div>`;
 
+  this.$inputElement.insertAdjacentHTML('afterend', template);
+}
 
 export default SearchTermRankView;
