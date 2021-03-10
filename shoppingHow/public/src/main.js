@@ -41,10 +41,24 @@ window.addEventListener('DOMContentLoaded', () => {
     $inputElement: _.$('._search_input'),
     $rankKeywordList: _.$('._rank_keyword_list'),
     rankUrl: 'https://shoppinghow.kakao.com/v1.0/shophow/top/recomKeyword.json?_=1615189485140',
-
+    rolling: {
+      timer: null,
+      timeSeconds: 3000,
+      maxPosition: '220'
+    }
   }
 
   const searchTermRankView = new SearchTermRankView(searchInput);
 
+  function requestJsonp(word, callback) {
+    const script = document.createElement('script');
+    script.src = `https://suggest-bar.daum.net/suggest?callback=${callback}&limit=10&mode=json&code=utf_in_out&q=${word}&id=shoppinghow_suggest`;
+    document.body.append(script);
+  }
 
+  window['responseJsonpData'] = function (data) {
+    console.log(data)
+  }
+
+  requestJsonp('abc', 'responseJsonpData');
 })
