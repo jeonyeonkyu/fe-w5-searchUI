@@ -1,4 +1,5 @@
 import { getResponseJsonUrl, delay } from './serviceUtil.js';
+import _ from './util.js';
 
 function SearchTermRankView({ $inputElement, $rankKeywordList, rankUrl, rolling }) {
   this.$inputElement = $inputElement;
@@ -6,6 +7,7 @@ function SearchTermRankView({ $inputElement, $rankKeywordList, rankUrl, rolling 
   this.rankUrl = rankUrl;
   this.rolling = rolling;
   this.rankKeywordArray = [];
+  this.inputPopupClassName = 'input_popup';
   this.RANKS_NUMBER = 10;
   this.init();
 }
@@ -21,19 +23,25 @@ SearchTermRankView.prototype.init = async function () {
 }
 
 SearchTermRankView.prototype.initEvent = function () {
-  this.$inputElement.addEventListener('click', (e) => {
-    clearTimeout(this.rolling.timer);
-  });
-
-  document.addEventListener('click', ({ target }) => {
-    if (target === this.$inputElement) return;
-
-  })
+  this.$inputElement.addEventListener('click', this.focusInputHandler.bind(this));
+  document.addEventListener('click', this.quitInputHandler.bind(this));
 
   this.$inputElement.addEventListener('input', async ({ target }) => {
-    console.log(target.value)
+    console.log(target.value);
   });
 }
+
+SearchTermRankView.prototype.focusInputHandler = function () {
+  _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+  clearTimeout(this.rolling.timer);
+}
+
+SearchTermRankView.prototype.quitInputHandler = function ({ target }) {
+  if (target === this.$inputElement) return;
+  _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
+  this.rollingSearchBar();
+}
+
 
 SearchTermRankView.prototype.rollingSearchBar = function () {
   this.rolling.timer = setTimeout(function tick() {
@@ -69,7 +77,7 @@ SearchTermRankView.prototype.renderRollingTemplate = function () {
 }
 
 SearchTermRankView.prototype.renderPopupTemplate = function () {
-  const template = `<div class="input_popup">
+  const template = `<div class="${this.inputPopupClassName} display_none">
                       <div>인기 쇼핑 키워드</div>
                       <ul>
                         ${this.rankKeywordArray.map((item, index) => {
