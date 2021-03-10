@@ -24,11 +24,14 @@
     width: 670px;
     border: 1px solid #cecfd1;
     border-radius: 10px;
+    &:focus-within {
+      border: 1px solid red;
+    }
 
     &--input {
       width: 100%;
       place-self: center;
-      input {
+      > input {
         width: 90%;
         height: 40px;
         margin-left: 33px;
@@ -39,7 +42,7 @@
           outline: none;
         }
       }
-      div {
+      &--rolling {
         position: absolute;
         height: 22px;
         top: 60px;
@@ -387,4 +390,31 @@ section {
 
 .transition_on {
   transition: all 300ms;
+}
+
+.input_popup {
+  position: absolute;
+  width: 620px;
+  height: 240px;
+  margin: 0;
+  padding: 25px;
+  top: 98px;
+  z-index: 1;
+  border: 1px solid red;
+  background: #fff;
+  border-radius: 10px;
+
+  > ul {
+    display: grid;
+    grid-template: repeat(5, 40px) / repeat(2, 50%);
+
+    > li {
+      padding: 12px 15px 0 0;
+      font-size: 14px;
+    }
+  }
+}
+
+.bold {
+  font-weight: 700;
 }
