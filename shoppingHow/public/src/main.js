@@ -36,11 +36,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const bottomCarouselView = new BottomCarouselView({ loadDataManager }, bottomElements);
 
-
   const searchInput = {
     $inputElement: _.$('._search_input'),
     $rankKeywordList: _.$('._rank_keyword_list'),
+    $searchWord: _.$('.head__search--input--word'),
     rankUrl: 'https://shoppinghow.kakao.com/v1.0/shophow/top/recomKeyword.json?_=1615189485140',
+    currentTypingUrl: 'https://suggest-bar.daum.net/suggest?limit=10&mode=json&code=utf_in_out&id=shoppinghow_suggest',
     rolling: {
       timer: null,
       timeSeconds: 3000,
@@ -50,15 +51,4 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const searchTermRankView = new SearchTermRankView(searchInput);
 
-  function requestJsonp(word, callback) {
-    const script = document.createElement('script');
-    script.src = `https://suggest-bar.daum.net/suggest?callback=${callback}&limit=10&mode=json&code=utf_in_out&q=${word}&id=shoppinghow_suggest`;
-    document.body.append(script);
-  }
-
-  window['responseJsonpData'] = function (data) {
-    console.log(data)
-  }
-
-  requestJsonp('abc', 'responseJsonpData');
 })

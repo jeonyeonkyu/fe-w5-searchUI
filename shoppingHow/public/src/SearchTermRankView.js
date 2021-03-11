@@ -1,12 +1,16 @@
 import { getResponseJsonUrl, delay } from './serviceUtil.js';
 import _ from './util.js';
 
-function SearchTermRankView({ $inputElement, $rankKeywordList, rankUrl, rolling }) {
+function SearchTermRankView({ $inputElement, $rankKeywordList, $searchWord, rankUrl, currentTypingUrl, rolling }) {
   this.$inputElement = $inputElement;
   this.$rankKeywordList = $rankKeywordList;
+  this.$searchWord = $searchWord;
   this.rankUrl = rankUrl;
+  this.currentTypingUrl = currentTypingUrl;
   this.rolling = rolling;
+  this.typingTimer = null;
   this.rankKeywordArray = [];
+  this.currentTypingArray = [];
   this.inputPopupClassName = 'input_popup';
   this.RANKS_NUMBER = 10;
   this.init();
@@ -20,28 +24,58 @@ SearchTermRankView.prototype.init = async function () {
   this.rollingSearchBar();
   this.observeSearchBarState();
   this.initEvent();
+  window['putInResponseJsonpData'] = this.putInResponseJsonpData.bind(this);
 }
 
 SearchTermRankView.prototype.initEvent = function () {
   this.$inputElement.addEventListener('click', this.focusInputHandler.bind(this));
   document.addEventListener('click', this.quitInputHandler.bind(this));
-
-  this.$inputElement.addEventListener('input', async ({ target }) => {
-    console.log(target.value);
+  this.$inputElement.addEventListener('input', ({ target }) => {
+    if (this.typingTimer) clearTimeout(this.typingTimer);
+    this.requestJsonp(target.value, 'putInResponseJsonpData');
+    this.typingTimer = setTimeout(function () {
+      if (target.value) {
+        this.$searchWord.classList.remove('display_none');
+        _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
+        this.renderSearchWordTemplate();
+      } else {
+        this.$searchWord.classList.add('display_none');
+        _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+      }
+    }.bind(this), 1000);
   });
 }
 
+SearchTermRankView.prototype.requestJsonp = function (word, callbackName) {
+  const script = document.createElement('script');
+  script.src = `${this.currentTypingUrl}&q=${word}&callback=${callbackName}`;
+  document.body.append(script);
+}
+
+SearchTermRankView.prototype.putInResponseJsonpData = function (data) {
+  this.currentTypingArray = data.items.map(item => item.replace(/\|.+/g, ''));
+};
+
 SearchTermRankView.prototype.focusInputHandler = function () {
-  _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+  this.$rankKeywordList.classList.add('display_none');
+  if (!this.$inputElement.value) {
+    _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+  }
+  if (this.currentTypingArray.length) {
+    this.$searchWord.classList.remove('display_none');
+  }
   clearTimeout(this.rolling.timer);
+  this.rolling.timer = null;
 }
 
 SearchTermRankView.prototype.quitInputHandler = function ({ target }) {
-  if (target === this.$inputElement) return;
+  if (target === this.$inputElement || target.closest(`.${this.inputPopupClassName}`)) return;
   _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
-  this.rollingSearchBar();
+  this.$searchWord.classList.add('display_none');
+  if (this.$inputElement.value) return;
+  this.$rankKeywordList.classList.remove('display_none');
+  if (!this.rolling.timer) this.rollingSearchBar();
 }
-
 
 SearchTermRankView.prototype.rollingSearchBar = function () {
   this.rolling.timer = setTimeout(function tick() {
@@ -60,7 +94,7 @@ SearchTermRankView.prototype.observeSearchBarState = function () {
       await delay('', 1000);
       this.$rankKeywordList.classList.add('transition_on');
     }
-  })
+  });
   const config = { attributes: true };
   observer.observe(this.$rankKeywordList, config);
 }
@@ -89,6 +123,19 @@ SearchTermRankView.prototype.renderPopupTemplate = function () {
                     </div>`;
 
   this.$inputElement.insertAdjacentHTML('afterend', template);
+}
+
+SearchTermRankView.prototype.renderSearchWordTemplate = function () {
+  if (!this.currentTypingArray.length) this.$searchWord.classList.add('display_none');
+  const template = `<ul>
+                      ${this.currentTypingArray.map(item => {
+    return `<li>
+              <span>${item}</span>
+            </li>`
+  }).join('')}
+                    </ul>`;
+
+  this.$searchWord.innerHTML = template;
 }
 
 export default SearchTermRankView;
