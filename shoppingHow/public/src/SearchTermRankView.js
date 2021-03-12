@@ -54,11 +54,12 @@ SearchTermRankView.prototype.focusInputHandler = function () {
 }
 
 SearchTermRankView.prototype.typingInputHandler = function ({ target: { value } }) {
+  this.keyWordIndex = -1;
   if (this.typingTimer) clearTimeout(this.typingTimer);
   this.typingTimer = setTimeout(async function () {
     await delay(this.requestJsonp(value, 'putInResponseJsonpData'), 500);
     if (value) {
-      this.$searchWord.classList.remove('display_none');
+      if (this.currentTypingArray.length) this.$searchWord.classList.remove('display_none');
       _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
       this.renderSearchWordTemplate(value);
     } else {
@@ -79,6 +80,7 @@ SearchTermRankView.prototype.quitInputHandler = function ({ target }) {
 
 SearchTermRankView.prototype.keydownInputHandler = function ({ key }) {
   if (this.$searchWord.classList.contains('display_none')) return;
+  if (!(key === 'ArrowDown' || key === 'ArrowUp')) return;
   const keyWordList = _.$All(`.${this.$searchWord.className} > ul > li`);
   keyWordList.forEach((element) => element.classList.remove('gray_background'));
   switch (key) {
@@ -142,7 +144,6 @@ SearchTermRankView.prototype.renderPopupTemplate = function () {
 }
 
 SearchTermRankView.prototype.renderSearchWordTemplate = function (word) {
-  if (!this.currentTypingArray.length) this.$searchWord.classList.add('display_none');
   const template = `<ul>
                       ${this.currentTypingArray.map(item => {
     return `<li>
