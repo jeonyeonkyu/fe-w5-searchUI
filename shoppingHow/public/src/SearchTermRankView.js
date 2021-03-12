@@ -13,6 +13,7 @@ function SearchTermRankView({ $inputElement, $rankKeywordList, $searchWord, rank
   this.currentTypingArray = [];
   this.inputPopupClassName = 'input_popup';
   this.RANKS_NUMBER = 10;
+  this.keyWordIndex = -1;
   this.init();
 }
 
@@ -29,21 +30,9 @@ SearchTermRankView.prototype.init = async function () {
 
 SearchTermRankView.prototype.initEvent = function () {
   this.$inputElement.addEventListener('click', this.focusInputHandler.bind(this));
+  this.$inputElement.addEventListener('input', this.typingInputHandler.bind(this));
   document.addEventListener('click', this.quitInputHandler.bind(this));
-  this.$inputElement.addEventListener('input', ({ target }) => {
-    if (this.typingTimer) clearTimeout(this.typingTimer);
-    this.requestJsonp(target.value, 'putInResponseJsonpData');
-    this.typingTimer = setTimeout(function () {
-      if (target.value) {
-        this.$searchWord.classList.remove('display_none');
-        _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
-        this.renderSearchWordTemplate();
-      } else {
-        this.$searchWord.classList.add('display_none');
-        _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
-      }
-    }.bind(this), 1000);
-  });
+  document.addEventListener('keydown', this.keydownInputHandler.bind(this));
 }
 
 SearchTermRankView.prototype.requestJsonp = function (word, callbackName) {
@@ -54,27 +43,54 @@ SearchTermRankView.prototype.requestJsonp = function (word, callbackName) {
 
 SearchTermRankView.prototype.putInResponseJsonpData = function (data) {
   this.currentTypingArray = data.items.map(item => item.replace(/\|.+/g, ''));
-};
+}
 
 SearchTermRankView.prototype.focusInputHandler = function () {
   this.$rankKeywordList.classList.add('display_none');
-  if (!this.$inputElement.value) {
-    _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
-  }
-  if (this.currentTypingArray.length) {
-    this.$searchWord.classList.remove('display_none');
-  }
+  if (!this.$inputElement.value) _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+  if (this.currentTypingArray.length) this.$searchWord.classList.remove('display_none');
   clearTimeout(this.rolling.timer);
   this.rolling.timer = null;
 }
 
+SearchTermRankView.prototype.typingInputHandler = function ({ target: { value } }) {
+  if (this.typingTimer) clearTimeout(this.typingTimer);
+  this.typingTimer = setTimeout(async function () {
+    await delay(this.requestJsonp(value, 'putInResponseJsonpData'), 500);
+    if (value) {
+      this.$searchWord.classList.remove('display_none');
+      _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
+      this.renderSearchWordTemplate(value);
+    } else {
+      this.$searchWord.classList.add('display_none');
+      _.$(`.${this.inputPopupClassName}`).classList.remove('display_none');
+    }
+  }.bind(this), 500);
+}
+
 SearchTermRankView.prototype.quitInputHandler = function ({ target }) {
-  if (target === this.$inputElement || target.closest(`.${this.inputPopupClassName}`)) return;
+  if (target === this.$inputElement || target.closest('.head__search--input')) return;
   _.$(`.${this.inputPopupClassName}`).classList.add('display_none');
   this.$searchWord.classList.add('display_none');
   if (this.$inputElement.value) return;
   this.$rankKeywordList.classList.remove('display_none');
   if (!this.rolling.timer) this.rollingSearchBar();
+}
+
+SearchTermRankView.prototype.keydownInputHandler = function ({ key }) {
+  if (this.$searchWord.classList.contains('display_none')) return;
+  const keyWordList = _.$All(`.${this.$searchWord.className} > ul > li`);
+  keyWordList.forEach((element) => element.classList.remove('gray_background'));
+  switch (key) {
+    case 'ArrowDown':
+      this.keyWordIndex = this.keyWordIndex < keyWordList.length - 1 ? ++this.keyWordIndex : this.keyWordIndex;
+      break;
+    case 'ArrowUp':
+      this.keyWordIndex = this.keyWordIndex > 0 ? --this.keyWordIndex : this.keyWordIndex;
+      break;
+  }
+  keyWordList[this.keyWordIndex].classList.add('gray_background');
+  this.$inputElement.value = keyWordList[this.keyWordIndex].innerText;
 }
 
 SearchTermRankView.prototype.rollingSearchBar = function () {
@@ -125,12 +141,12 @@ SearchTermRankView.prototype.renderPopupTemplate = function () {
   this.$inputElement.insertAdjacentHTML('afterend', template);
 }
 
-SearchTermRankView.prototype.renderSearchWordTemplate = function () {
+SearchTermRankView.prototype.renderSearchWordTemplate = function (word) {
   if (!this.currentTypingArray.length) this.$searchWord.classList.add('display_none');
   const template = `<ul>
                       ${this.currentTypingArray.map(item => {
     return `<li>
-              <span>${item}</span>
+              <span>${item.replace(word, `<span class='highlight'>${word}</span>`)}</span>
             </li>`
   }).join('')}
                     </ul>`;
